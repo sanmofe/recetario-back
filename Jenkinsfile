@@ -1,3 +1,8 @@
+pipeline { 
+    agent any
+    environment {
+        HOME = "${WORKSPACE}"
+        GIT_REPO = 'MISW4201-202314-Backend-Grupo23'
         GITHUB_TOKEN_ID = '43771338-0057-4a96-ae03-93ee5419d871'
     }
     stages {
