@@ -6,20 +6,17 @@ from datetime import datetime
 import hashlib
 
 from modelos import \
-    db, \
+    db, Roles, \
     Ingrediente, IngredienteSchema, \
     RecetaIngrediente, RecetaIngredienteSchema, \
     Receta, RecetaSchema, \
-    Usuario, UsuarioSchema, \
-    UsuariosChefs, UsuariosChefsSchema, \
-    Chef, ChefSchema
+    Usuario, UsuarioSchema \
 
 
 ingrediente_schema = IngredienteSchema()
 receta_ingrediente_schema = RecetaIngredienteSchema()
 receta_schema = RecetaSchema()
 usuario_schema = UsuarioSchema()
-usuarios_chefs_schema = UsuariosChefsSchema()
     
 class VistaSignIn(Resource):
 
@@ -27,7 +24,7 @@ class VistaSignIn(Resource):
         usuario = Usuario.query.filter(Usuario.usuario == request.json["usuario"]).first()
         if usuario is None:
             contrasena_encriptada = hashlib.md5(request.json["contrasena"].encode('utf-8')).hexdigest()
-            nuevo_usuario = Usuario(usuario=request.json["usuario"], contrasena=contrasena_encriptada)
+            nuevo_usuario = Usuario(usuario=request.json["usuario"], contrasena=contrasena_encriptada, Rol=Roles.ADMIN)
             db.session.add(nuevo_usuario)
             db.session.commit()
             token_de_acceso = create_access_token(identity=nuevo_usuario.id)
@@ -65,18 +62,20 @@ class VistaLogIn(Resource):
 class VistaUsuariosChefs(Resource):
     @jwt_required()
     def get(self, id_usuario):
-        return usuarios_chefs_schema.dump(UsuariosChefs.query.filter_by(usuario=str(id_usuario)).all())
+        return usuario_schema.dump(Usuario.query.filter_by(parent_id=id_usuario).all())
     
     @jwt_required()
     def post(self, id_usuario):
         nuevo_user = Usuario( \
             usuario = request.json["usuario"], \
-            contrasena = hashlib.md5(request.json["contrasena"].encode('utf-8')).hexdigest() \
+            contrasena = hashlib.md5(request.json["contrasena"].encode('utf-8')).hexdigest(), \
+            rol = Roles.CHEF, \
+            nombre = request.json["nombre"], \
+            parent_id = id_usuario
         )
-        nuevo_chef = Chef( \
-                id = nuevo_user, \
-                nombre = request.json["nombre"] \
-        )
+        db.session.add(nuevo_user)
+        db.session.commit()
+        return {"mensaje": "usuario creado exitosamente", "id": nuevo_user.id}
 
 class VistaIngredientes(Resource):
     @jwt_required()
