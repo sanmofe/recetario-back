@@ -18,6 +18,11 @@ class RecetaIngrediente(db.Model):
     ingrediente = db.Column(db.Integer, db.ForeignKey('ingrediente.id'))
     receta = db.Column(db.Integer, db.ForeignKey('receta.id'))
 
+class UsuariosChefs(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    usuario = db.Column(db.Integer, db.ForeignKey('usuario.id'))
+    chef = db.Column(db.Integer, db.ForeignKey('chef.id'))
+
 class Receta(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     nombre = db.Column(db.String(128))
@@ -31,7 +36,22 @@ class Usuario(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     usuario = db.Column(db.String(50))
     contrasena = db.Column(db.String(50))
+    chefs = db.relationship('UsuariosChefs', cascade='all, delete, delete-orphan')
     recetas = db.relationship('Receta', cascade='all, delete, delete-orphan')
+
+class Chef(Usuario):
+    id = db.Column(db.Integer, db.ForeignKey('usuario.id'), primary_key=True)
+    nombre = db.Column(db.String(200))
+
+class ChefSchema(SQLAlchemyAutoSchema):
+    class Meta:
+        model = Chef
+        include_relationships = True
+        load_instance = True
+        
+    id = fields.String()
+    nombre = fields.String()
+
 
 class IngredienteSchema(SQLAlchemyAutoSchema):
     class Meta:
@@ -41,6 +61,16 @@ class IngredienteSchema(SQLAlchemyAutoSchema):
     id = fields.String()
     costo = fields.String()
     calorias = fields.String()
+
+class UsuariosChefsSchema(SQLAlchemyAutoSchema):
+    class Meta:
+        model = UsuariosChefs
+        include_relationships = True
+        include_fk = True
+        load_instance = True
+        
+    usuario = fields.String()
+    chef = fields.String()
 
 class RecetaIngredienteSchema(SQLAlchemyAutoSchema):
     class Meta:
@@ -72,3 +102,4 @@ class UsuarioSchema(SQLAlchemyAutoSchema):
         load_instance = True
         
     id = fields.String()
+    chefs = fields.List(fields.Nested(UsuariosChefsSchema()))

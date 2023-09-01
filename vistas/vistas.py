@@ -10,13 +10,16 @@ from modelos import \
     Ingrediente, IngredienteSchema, \
     RecetaIngrediente, RecetaIngredienteSchema, \
     Receta, RecetaSchema, \
-    Usuario, UsuarioSchema
+    Usuario, UsuarioSchema, \
+    UsuariosChefs, UsuariosChefsSchema, \
+    Chef, ChefSchema
 
 
 ingrediente_schema = IngredienteSchema()
 receta_ingrediente_schema = RecetaIngredienteSchema()
 receta_schema = RecetaSchema()
 usuario_schema = UsuarioSchema()
+usuarios_chefs_schema = UsuariosChefsSchema()
     
 class VistaSignIn(Resource):
 
@@ -58,7 +61,22 @@ class VistaLogIn(Resource):
         else:
             token_de_acceso = create_access_token(identity=usuario.id)
             return {"mensaje": "Inicio de sesión exitoso", "token": token_de_acceso, "id": usuario.id}
-
+        
+class VistaUsuariosChefs(Resource):
+    @jwt_required()
+    def get(self, id_usuario):
+        return usuarios_chefs_schema.dump(UsuariosChefs.query.filter_by(usuario=str(id_usuario)).all())
+    
+    @jwt_required()
+    def post(self, id_usuario):
+        nuevo_user = Usuario( \
+            usuario = request.json["usuario"], \
+            contrasena = hashlib.md5(request.json["contrasena"].encode('utf-8')).hexdigest() \
+        )
+        nuevo_chef = Chef( \
+                id = nuevo_user, \
+                nombre = request.json["nombre"] \
+        )
 
 class VistaIngredientes(Resource):
     @jwt_required()
