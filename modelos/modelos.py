@@ -4,6 +4,19 @@ from marshmallow_sqlalchemy import SQLAlchemyAutoSchema
 
 db = SQLAlchemy()
 
+class Resturante(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    nombre = db.Column(db.String(200))
+    direccion = db.Column(db.String(200))
+    telefono = db.Column(db.String(200))
+    redesSociales = db.Column(db.String(500))
+    horario = db.Column(db.String(500))
+    tipoComida = db.Column(db.String(500))
+    apps = db.Column(db.String(500))
+    opciones = db.Column(db.Numeric)
+    usuario = db.Column(db.Integer, db.ForeignKey('usuario.id'))
+
+
 class Ingrediente(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     nombre = db.Column(db.String(128))
@@ -32,6 +45,23 @@ class Usuario(db.Model):
     usuario = db.Column(db.String(50))
     contrasena = db.Column(db.String(50))
     recetas = db.relationship('Receta', cascade='all, delete, delete-orphan')
+
+class ResturanteSchema(SQLAlchemyAutoSchema):
+    class Meta:
+        model = Resturante
+        include_relationships = True
+        include_fk = True
+        load_instance = True
+        
+    id = fields.String()
+    nombre = fields.String()
+    direccion = fields.String()
+    telefono = fields.String()
+    redesSociales = fields.String()
+    horario = fields.String()
+    tipoComida = fields.String()
+    apps = fields.String()
+    opciones = fields.String()
 
 class IngredienteSchema(SQLAlchemyAutoSchema):
     class Meta:
