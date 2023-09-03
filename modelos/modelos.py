@@ -33,6 +33,10 @@ class Usuario(db.Model):
     contrasena = db.Column(db.String(50))
     recetas = db.relationship('Receta', cascade='all, delete, delete-orphan')
 
+class AministradorIngrediente(db.Model):
+    idIngrediente = db.Column(db.Intefer, db.ForeignKey('ingrediente.id'))
+    idUsuario = db.Column(db.Intefer, db.ForeignKey('usuario.id'))
+
 class IngredienteSchema(SQLAlchemyAutoSchema):
     class Meta:
         model = Ingrediente
@@ -72,3 +76,4 @@ class UsuarioSchema(SQLAlchemyAutoSchema):
         load_instance = True
         
     id = fields.String()
+
