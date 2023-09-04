@@ -24,7 +24,7 @@ class VistaSignIn(Resource):
         usuario = Usuario.query.filter(Usuario.usuario == request.json["usuario"]).first()
         if usuario is None:
             contrasena_encriptada = hashlib.md5(request.json["contrasena"].encode('utf-8')).hexdigest()
-            nuevo_usuario = Usuario(usuario=request.json["usuario"], contrasena=contrasena_encriptada, Rol=Roles.ADMIN)
+            nuevo_usuario = Usuario(usuario=request.json["usuario"], contrasena=contrasena_encriptada, rol=Roles.ADMIN)
             db.session.add(nuevo_usuario)
             db.session.commit()
             token_de_acceso = create_access_token(identity=nuevo_usuario.id)
@@ -62,7 +62,8 @@ class VistaLogIn(Resource):
 class VistaUsuariosChefs(Resource):
     @jwt_required()
     def get(self, id_usuario):
-        return usuario_schema.dump(Usuario.query.filter_by(parent_id=id_usuario).all())
+        results = (Usuario.query.filter_by(parent_id=str(id_usuario)).all())
+        return [usuario_schema.dump(usuario) for usuario in results]
     
     @jwt_required()
     def post(self, id_usuario):
@@ -75,7 +76,7 @@ class VistaUsuariosChefs(Resource):
         )
         db.session.add(nuevo_user)
         db.session.commit()
-        return {"mensaje": "usuario creado exitosamente", "id": nuevo_user.id}
+        return {"mensaje": "Chef creado exitosamente", "id": nuevo_user.id}
 
 class VistaIngredientes(Resource):
     @jwt_required()

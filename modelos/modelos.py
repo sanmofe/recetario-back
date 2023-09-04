@@ -7,9 +7,9 @@ import enum
 db = SQLAlchemy()
 Base = declarative_base()
 
-class Roles(enum.Enum):
-    ADMIN = "admin"
-    CHEF = "chef"
+class Roles(str, enum.Enum):
+    ADMIN = "ADMIN"
+    CHEF = "CHEF"
 
 class Ingrediente(db.Model):
     id = db.Column(db.Integer, primary_key=True)
