@@ -6,11 +6,11 @@ from datetime import datetime
 import hashlib
 
 from modelos import \
-    db, \
+    db, Roles, \
     Ingrediente, IngredienteSchema, \
     RecetaIngrediente, RecetaIngredienteSchema, \
     Receta, RecetaSchema, \
-    Usuario, UsuarioSchema
+    Usuario, UsuarioSchema \
 
 
 ingrediente_schema = IngredienteSchema()
@@ -24,7 +24,7 @@ class VistaSignIn(Resource):
         usuario = Usuario.query.filter(Usuario.usuario == request.json["usuario"]).first()
         if usuario is None:
             contrasena_encriptada = hashlib.md5(request.json["contrasena"].encode('utf-8')).hexdigest()
-            nuevo_usuario = Usuario(usuario=request.json["usuario"], contrasena=contrasena_encriptada)
+            nuevo_usuario = Usuario(usuario=request.json["usuario"], contrasena=contrasena_encriptada, rol=Roles.ADMIN)
             db.session.add(nuevo_usuario)
             db.session.commit()
             token_de_acceso = create_access_token(identity=nuevo_usuario.id)
@@ -58,7 +58,25 @@ class VistaLogIn(Resource):
         else:
             token_de_acceso = create_access_token(identity=usuario.id)
             return {"mensaje": "Inicio de sesión exitoso", "token": token_de_acceso, "id": usuario.id}
-
+        
+class VistaUsuariosChefs(Resource):
+    @jwt_required()
+    def get(self, id_usuario):
+        results = (Usuario.query.filter_by(parent_id=str(id_usuario)).all())
+        return [usuario_schema.dump(usuario) for usuario in results]
+    
+    @jwt_required()
+    def post(self, id_usuario):
+        nuevo_user = Usuario( \
+            usuario = request.json["usuario"], \
+            contrasena = hashlib.md5(request.json["contrasena"].encode('utf-8')).hexdigest(), \
+            rol = Roles.CHEF, \
+            nombre = request.json["nombre"], \
+            parent_id = id_usuario
+        )
+        db.session.add(nuevo_user)
+        db.session.commit()
+        return {"mensaje": "Chef creado exitosamente", "id": nuevo_user.id}
 
 class VistaIngredientes(Resource):
     @jwt_required()
