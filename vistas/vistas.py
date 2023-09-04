@@ -130,11 +130,13 @@ class VistaRestaurantes(Resource):
             opciones = int(request.json["opciones"]), \
             usuario = id_usuario \
         )
+        try:
+            db.session.add(nuevo_resturante)
+            db.session.commit()
+        except:
+            return "El nombre del restaurante ya existe", 404
             
-        db.session.add(nuevo_resturante)
-        db.session.commit()
         return ingrediente_schema.dump(nuevo_resturante)
-        
 
 class VistaRestaurante(Resource):
     @jwt_required()
@@ -283,5 +285,3 @@ class VistaReceta(Resource):
                 receta_ingrediente_retornar = receta_ingrediente
                 
         return receta_ingrediente_retornar
-        
-#20230828 5:30 - 
