@@ -63,6 +63,8 @@ def admin_required():
 
     return wrapper
 """
+
+
 class VistaSignIn(Resource):
 
     def post(self):
@@ -295,4 +297,12 @@ class VistaReceta(Resource):
                 receta_ingrediente_retornar = receta_ingrediente
                 
         return receta_ingrediente_retornar
-        
+
+
+class VistaTipoUsuario(Resource):
+    @jwt_required()
+    def get(self):
+        current_user = get_jwt()
+    # Lógica para obtener el tipo de usuario del back
+        user_role = current_user['rol']  
+        return {"user_type":user_role}
