@@ -61,12 +61,12 @@ class TestRestaurante(TestCase):
         horario_nuevo_restaurante = self.data_factory.sentence()
         tipoComida_nuevo_restaurante = self.data_factory.sentence()
         apps_nuevo_restaurante = self.data_factory.sentence()
-        opciones_nuevo_restaurante = round(random.uniform(0.1, 0.3), 2)
+        opciones_nuevo_restaurante = round(random.uniform(1, 3))
         
         #Crear el json con el restaurante a crear
         nuevo_restaurante = {
             "nombre": nombre_nuevo_restaurante,
-            "direccion":direccion_nuevo_restaurante,
+            "direccion": direccion_nuevo_restaurante,
             "telefono": telefono_nuevo_restaurante,
             "redesSociales": redesSociales_nuevo_restaurante,
             "horario": horario_nuevo_restaurante,
@@ -76,7 +76,7 @@ class TestRestaurante(TestCase):
         }
         
         #Definir endpoint, encabezados y hacer el llamado
-        endpoint_restaurantes = "/restaurantes"
+        endpoint_restaurantes = "/restaurantes/" + str(self.usuario_id)
         headers = {'Content-Type': 'application/json', "Authorization": "Bearer {}".format(self.token)}
         
         resultado_nuevo_restaurante = self.client.post(endpoint_restaurantes,
@@ -111,7 +111,7 @@ class TestRestaurante(TestCase):
         horario_nuevo_restaurante = self.data_factory.sentence()
         tipoComida_nuevo_restaurante = self.data_factory.sentence()
         apps_nuevo_restaurante = self.data_factory.sentence()
-        opciones_nuevo_restaurante = round(random.uniform(0.1, 0.3), 2)
+        opciones_nuevo_restaurante = round(random.uniform(1, 3))
 
         #Crear el restaurante con los datos originales para obtener su id
         restaurante = Resturante(nombre = nombre_nuevo_restaurante,
@@ -160,7 +160,7 @@ class TestRestaurante(TestCase):
             horario_nuevo_restaurante = self.data_factory.sentence()
             tipoComida_nuevo_restaurante = self.data_factory.sentence()
             apps_nuevo_restaurante = self.data_factory.sentence()
-            opciones_nuevo_restaurante = round(random.uniform(0.1, 0.3), 2)
+            opciones_nuevo_restaurante = round(random.uniform(1, 3))
 
             #Crear el restaurante con los datos originales para obtener su id
             restaurante = Resturante(nombre = nombre_nuevo_restaurante,
@@ -177,7 +177,7 @@ class TestRestaurante(TestCase):
             self.restaurantes_creados.append(restaurante)
         
         #Definir endpoint, encabezados y hacer el llamado
-        endpoint_restaurantes = "/restaurantes"
+        endpoint_restaurantes = "/restaurantes/" + str(self.usuario_id)
         headers = {'Content-Type': 'application/json', "Authorization": "Bearer {}".format(self.token)}
         
         resultado_consulta_restaurante = self.client.get(endpoint_restaurantes,

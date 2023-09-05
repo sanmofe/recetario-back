@@ -138,7 +138,7 @@ class VistaRestaurantes(Resource):
         except:
             return "El nombre del restaurante ya existe", 404
             
-        return ingrediente_schema.dump(nuevo_resturante)
+        return restaurante_schema.dump(nuevo_resturante)
 
 # HU: REC-4 y REC-6
 # Creación de vista
