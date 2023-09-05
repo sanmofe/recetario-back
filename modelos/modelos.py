@@ -4,6 +4,8 @@ from marshmallow_sqlalchemy import SQLAlchemyAutoSchema
 
 db = SQLAlchemy()
 
+# HU: REC-4 y REC-6
+# Creación de objeto
 class Resturante(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     nombre = db.Column(db.String(200), unique=True)
@@ -46,6 +48,8 @@ class Usuario(db.Model):
     contrasena = db.Column(db.String(50))
     recetas = db.relationship('Receta', cascade='all, delete, delete-orphan')
 
+# HU: REC-4 y REC-6
+# Creación de esquema
 class ResturanteSchema(SQLAlchemyAutoSchema):
     class Meta:
         model = Resturante

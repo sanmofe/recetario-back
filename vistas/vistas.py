@@ -110,6 +110,8 @@ class VistaIngrediente(Resource):
         else:
             return 'El ingrediente se está usando en diferentes recetas', 409
 
+# HU: REC-4 y REC-6
+# Creación de vista
 class VistaRestaurantes(Resource):
     @jwt_required()
     def get(self, id_usuario):
@@ -138,6 +140,8 @@ class VistaRestaurantes(Resource):
             
         return ingrediente_schema.dump(nuevo_resturante)
 
+# HU: REC-4 y REC-6
+# Creación de vista
 class VistaRestaurante(Resource):
     @jwt_required()
     def get(self, id_restaurante):

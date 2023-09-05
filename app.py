@@ -29,8 +29,11 @@ api.add_resource(VistaSignIn, '/signin')
 api.add_resource(VistaLogIn, '/login')
 api.add_resource(VistaIngredientes, '/ingredientes')
 api.add_resource(VistaIngrediente, '/ingrediente/<int:id_ingrediente>')
+
+# HU: REC-4 y REC-6
 api.add_resource(VistaRestaurantes, '/restaurantes/<int:id_usuario>')
 api.add_resource(VistaRestaurante, '/restaurante/<int:id_restaurante>')
+
 api.add_resource(VistaRecetas, '/recetas/<int:id_usuario>')
 api.add_resource(VistaReceta, '/receta/<int:id_receta>')
 
