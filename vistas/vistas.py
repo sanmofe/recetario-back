@@ -1,8 +1,10 @@
 from flask import request
-from flask_jwt_extended import jwt_required, create_access_token
+from flask_jwt_extended import jwt_required, create_access_token, verify_jwt_in_request, get_jwt
 from flask_restful import Resource
 from sqlalchemy.exc import IntegrityError
 from datetime import datetime
+from functools import wraps
+from flask import jsonify
 import hashlib
 
 from modelos import \
@@ -17,7 +19,50 @@ ingrediente_schema = IngredienteSchema()
 receta_ingrediente_schema = RecetaIngredienteSchema()
 receta_schema = RecetaSchema()
 usuario_schema = UsuarioSchema()
-    
+
+"""
+def admin_required(fn):
+    @wraps(fn)
+    def wrapper(*args, **kwargs):
+        verify_jwt_in_request()
+        claims = get_jwt()
+        if claims['rol'] == 'ADMIN':
+            return fn(*args, **kwargs)
+        else:
+            return jsonify({"mensaje": "Acceso denegado"}), 403
+    return wrapper
+"""
+
+def role_required(*roles):
+    def decorator(fn):
+        @wraps(fn)
+        def wrapper(*args, **kwargs):
+            verify_jwt_in_request()
+            claims = get_jwt()
+            print("ROL DEL USUARIO: ",claims)
+            rol = claims['rol']
+            if rol not in roles:
+                return {"mensaje": "Acceso denegado"}, 403
+            return fn(*args, **kwargs)
+        return wrapper
+    return decorator
+"""
+def admin_required():
+    def wrapper(fn):
+        @wraps(fn)
+        def decorator(*args, **kwargs):
+            verify_jwt_in_request()
+            claims = get_jwt()
+            print("ROL DEL USUARIO: ",claims)
+            if claims["is_admin"]:
+                return fn(*args, **kwargs)
+            else:
+                return jsonify(msg="Admins only!"), 403
+
+        return decorator
+
+    return wrapper
+"""
 class VistaSignIn(Resource):
 
     def post(self):
@@ -27,8 +72,9 @@ class VistaSignIn(Resource):
             nuevo_usuario = Usuario(usuario=request.json["usuario"], contrasena=contrasena_encriptada, rol=Roles.ADMIN)
             db.session.add(nuevo_usuario)
             db.session.commit()
-            token_de_acceso = create_access_token(identity=nuevo_usuario.id)
-            return {"mensaje": "usuario creado exitosamente", "id": nuevo_usuario.id}
+            additional_claims={'rol': nuevo_usuario.rol}
+            token_de_acceso = create_access_token(identity=nuevo_usuario.id, additional_claims=additional_claims)
+            return {"mensaje": "usuario creado exitosamente", "id": nuevo_usuario.id, "rol":nuevo_usuario.rol, "token":token_de_acceso}
         else:
             return "El usuario ya existe", 404
 
@@ -56,15 +102,22 @@ class VistaLogIn(Resource):
         if usuario is None:
             return "El usuario no existe", 404
         else:
-            token_de_acceso = create_access_token(identity=usuario.id)
+            additional_claims={'rol': usuario.rol}
+            print(additional_claims)
+            token_de_acceso = create_access_token(identity=usuario.id, additional_claims=additional_claims)
+            #token_de_acceso = create_access_token(identity=usuario.id)
             return {"mensaje": "Inicio de sesión exitoso", "token": token_de_acceso, "id": usuario.id}
         
 class VistaUsuariosChefs(Resource):
+
+    @role_required('ADMIN')
     @jwt_required()
+    #@admin_required()
     def get(self, id_usuario):
         results = (Usuario.query.filter_by(parent_id=str(id_usuario)).all())
         return [usuario_schema.dump(usuario) for usuario in results]
     
+    @role_required('ADMIN')
     @jwt_required()
     def post(self, id_usuario):
         nuevo_user = Usuario( \
