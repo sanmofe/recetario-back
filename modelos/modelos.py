@@ -1,8 +1,15 @@
 from flask_sqlalchemy import SQLAlchemy
 from marshmallow import fields, Schema
 from marshmallow_sqlalchemy import SQLAlchemyAutoSchema
+from sqlalchemy.ext.declarative import declarative_base
+import enum
 
 db = SQLAlchemy()
+Base = declarative_base()
+
+class Roles(str, enum.Enum):
+    ADMIN = "ADMIN"
+    CHEF = "CHEF"
 
 # HU: REC-4 y REC-6
 # Creación de objeto
@@ -46,7 +53,11 @@ class Usuario(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     usuario = db.Column(db.String(50))
     contrasena = db.Column(db.String(50))
+    nombre = db.Column(db.String(50))
+    parent_id = db.Column(db.Integer, db.ForeignKey("usuario.id"))
+    parent = db.relationship("Usuario", remote_side=[id])
     recetas = db.relationship('Receta', cascade='all, delete, delete-orphan')
+    rol = db.Column(db.Enum(Roles))
 
 # HU: REC-4 y REC-6
 # Creación de esquema
@@ -71,10 +82,12 @@ class IngredienteSchema(SQLAlchemyAutoSchema):
     class Meta:
         model = Ingrediente
         load_instance = True
-        
+
     id = fields.String()
     costo = fields.String()
     calorias = fields.String()
+
+
 
 class RecetaIngredienteSchema(SQLAlchemyAutoSchema):
     class Meta:
