@@ -40,6 +40,10 @@ class RecetaIngrediente(db.Model):
     ingrediente = db.Column(db.Integer, db.ForeignKey('ingrediente.id'))
     receta = db.Column(db.Integer, db.ForeignKey('receta.id'))
 
+class AministradorIngrediente(db.Model):
+    idIngrediente = db.Column(db.Intefer, db.ForeignKey('ingrediente.id'))
+    idUsuario = db.Column(db.Intefer, db.ForeignKey('usuario.id'))
+
 class Receta(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     nombre = db.Column(db.String(128))
@@ -77,10 +81,6 @@ class ResturanteSchema(SQLAlchemyAutoSchema):
     tipoComida = fields.String()
     apps = fields.String()
     opciones = fields.String()
-
-class AministradorIngrediente(db.Model):
-    idIngrediente = db.Column(db.Intefer, db.ForeignKey('ingrediente.id'))
-    idUsuario = db.Column(db.Intefer, db.ForeignKey('usuario.id'))
 
 class IngredienteSchema(SQLAlchemyAutoSchema):
     class Meta:
