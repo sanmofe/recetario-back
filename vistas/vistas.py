@@ -34,7 +34,9 @@ def admin_required(fn):
             return jsonify({"mensaje": "Acceso denegado"}), 403
     return wrapper
 """
-
+"""
+REC-8 Ingreso-al-sistema: Se utilizan parametros de los metodos de flask-jwt-extended para guardar roles.
+"""
 def role_required(*roles):
     def decorator(fn):
         @wraps(fn)
@@ -66,7 +68,10 @@ def admin_required():
     return wrapper
 """
 
-
+"""
+REC-8 Ingreso-al-sistema: Utilización del token de acceso para guardar información los roles del usuario para poder
+ser accedidos luego.
+"""
 class VistaSignIn(Resource):
 
     def post(self):
@@ -95,6 +100,10 @@ class VistaSignIn(Resource):
         return '', 204
 
 
+"""
+REC-8 Ingreso-al-sistema: Utilización del token de acceso para guardar información los roles del usuario para poder
+ser accedidos luego.
+"""
 class VistaLogIn(Resource):
 
     def post(self):
@@ -362,7 +371,10 @@ class VistaReceta(Resource):
                 receta_ingrediente_retornar = receta_ingrediente
                 
         return receta_ingrediente_retornar
-
+    
+"""
+REC-8 Ingreso-al-sistema Lógica para obtener el tipo de usuario del back
+"""
 class VistaTipoUsuario(Resource):
     @jwt_required()
     def get(self):
