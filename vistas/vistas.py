@@ -9,6 +9,7 @@ import hashlib
 
 from modelos import \
     db, Roles, \
+    Resturante, ResturanteSchema, \
     Ingrediente, IngredienteSchema, \
     RecetaIngrediente, RecetaIngredienteSchema, \
     Receta, RecetaSchema, \
@@ -16,6 +17,7 @@ from modelos import \
 
 
 ingrediente_schema = IngredienteSchema()
+restaurante_schema = ResturanteSchema()
 receta_ingrediente_schema = RecetaIngredienteSchema()
 receta_schema = RecetaSchema()
 usuario_schema = UsuarioSchema()
@@ -181,6 +183,69 @@ class VistaIngrediente(Resource):
         else:
             return 'El ingrediente se está usando en diferentes recetas', 409
 
+# HU: REC-4 y REC-6
+# Creación de vista
+class VistaRestaurantes(Resource):
+    @jwt_required()
+    def get(self, id_usuario):
+        restaurantes = Resturante.query.filter_by(usuario=str(id_usuario)).all()
+        resultados = [restaurante_schema.dump(restaurante) for restaurante in restaurantes]
+        return resultados
+
+    @jwt_required()
+    def post(self, id_usuario):
+        nuevo_resturante = Resturante( \
+            nombre = request.json["nombre"], \
+            direccion = request.json["direccion"], \
+            telefono = request.json["telefono"], \
+            redesSociales = request.json["redesSociales"], \
+            horario = request.json["horario"], \
+            tipoComida = request.json["tipoComida"], \
+            apps = request.json["apps"], \
+            opciones = int(request.json["opciones"]), \
+            usuario = id_usuario \
+        )
+        try:
+            db.session.add(nuevo_resturante)
+            db.session.commit()
+        except:
+            return "El nombre del restaurante ya existe", 404
+            
+        return restaurante_schema.dump(nuevo_resturante)
+
+# HU: REC-4 y REC-6
+# Creación de vista
+class VistaRestaurante(Resource):
+    @jwt_required()
+    def get(self, id_restaurante):
+        restaurante = Resturante.query.get_or_404(id_restaurante)
+        resultados = restaurante_schema.dump(Resturante.query.get_or_404(id_restaurante))
+     
+        return resultados
+
+    @jwt_required()
+    def put(self, id_restaurante):
+        restaurante = Resturante.query.get_or_404(id_restaurante)
+        restaurante.nombre = request.json["nombre"]
+        restaurante.direccion = request.json["direccion"]
+        restaurante.telefono = request.json["telefono"]
+        restaurante.redesSociales = request.json["redesSociales"]
+        restaurante.horario = request.json["horario"]
+        restaurante.tipoComida = request.json["tipoComida"]
+        restaurante.apps = request.json["apps"]
+        restaurante.opciones = int(request.json["opciones"])
+        
+        db.session.add(restaurante)
+        db.session.commit()
+        return restaurante_schema.dump(restaurante)
+
+    @jwt_required()
+    def delete(self, id_restaurante):
+        restaurante = Resturante.query.get_or_404(id_restaurante)
+        db.session.delete(restaurante)
+        db.session.commit()
+        return '', 204 
+        
 
 class VistaRecetas(Resource):
     @jwt_required()
@@ -297,7 +362,6 @@ class VistaReceta(Resource):
                 receta_ingrediente_retornar = receta_ingrediente
                 
         return receta_ingrediente_retornar
-
 
 class VistaTipoUsuario(Resource):
     @jwt_required()

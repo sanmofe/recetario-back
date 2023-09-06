@@ -6,6 +6,7 @@ from flask_restful import Api
 from modelos import db
 from vistas import \
     VistaIngrediente, VistaIngredientes, \
+    VistaRestaurante, VistaRestaurantes, \
     VistaReceta, VistaRecetas, \
     VistaSignIn, VistaLogIn, \
     VistaUsuariosChefs, VistaTipoUsuario
@@ -30,6 +31,11 @@ api.add_resource(VistaSignIn, '/signin')
 api.add_resource(VistaLogIn, '/login')
 api.add_resource(VistaIngredientes, '/ingredientes')
 api.add_resource(VistaIngrediente, '/ingrediente/<int:id_ingrediente>')
+
+# HU: REC-4 y REC-6
+api.add_resource(VistaRestaurantes, '/restaurantes/<int:id_usuario>')
+api.add_resource(VistaRestaurante, '/restaurante/<int:id_restaurante>')
+
 api.add_resource(VistaRecetas, '/recetas/<int:id_usuario>')
 api.add_resource(VistaReceta, '/receta/<int:id_receta>')
 api.add_resource(VistaUsuariosChefs, '/chefs/<int:id_usuario>')
