@@ -1,34 +1,84 @@
 from flask import request
-from flask_jwt_extended import jwt_required, create_access_token
+from flask_jwt_extended import jwt_required, create_access_token, verify_jwt_in_request, get_jwt
 from flask_restful import Resource
 from sqlalchemy.exc import IntegrityError
 from datetime import datetime
+from functools import wraps
+from flask import jsonify
 import hashlib
 
 from modelos import \
-    db, \
+    db, Roles, \
+    Resturante, ResturanteSchema, \
     Ingrediente, IngredienteSchema, \
     RecetaIngrediente, RecetaIngredienteSchema, \
     Receta, RecetaSchema, \
-    Usuario, UsuarioSchema
+    Usuario, UsuarioSchema \
 
 
 ingrediente_schema = IngredienteSchema()
+restaurante_schema = ResturanteSchema()
 receta_ingrediente_schema = RecetaIngredienteSchema()
 receta_schema = RecetaSchema()
 usuario_schema = UsuarioSchema()
-    
+
+"""
+def admin_required(fn):
+    @wraps(fn)
+    def wrapper(*args, **kwargs):
+        verify_jwt_in_request()
+        claims = get_jwt()
+        if claims['rol'] == 'ADMIN':
+            return fn(*args, **kwargs)
+        else:
+            return jsonify({"mensaje": "Acceso denegado"}), 403
+    return wrapper
+"""
+
+def role_required(*roles):
+    def decorator(fn):
+        @wraps(fn)
+        def wrapper(*args, **kwargs):
+            verify_jwt_in_request()
+            claims = get_jwt()
+            print("ROL DEL USUARIO: ",claims)
+            rol = claims['rol']
+            if rol not in roles:
+                return {"mensaje": "Acceso denegado"}, 403
+            return fn(*args, **kwargs)
+        return wrapper
+    return decorator
+"""
+def admin_required():
+    def wrapper(fn):
+        @wraps(fn)
+        def decorator(*args, **kwargs):
+            verify_jwt_in_request()
+            claims = get_jwt()
+            print("ROL DEL USUARIO: ",claims)
+            if claims["is_admin"]:
+                return fn(*args, **kwargs)
+            else:
+                return jsonify(msg="Admins only!"), 403
+
+        return decorator
+
+    return wrapper
+"""
+
+
 class VistaSignIn(Resource):
 
     def post(self):
         usuario = Usuario.query.filter(Usuario.usuario == request.json["usuario"]).first()
         if usuario is None:
             contrasena_encriptada = hashlib.md5(request.json["contrasena"].encode('utf-8')).hexdigest()
-            nuevo_usuario = Usuario(usuario=request.json["usuario"], contrasena=contrasena_encriptada)
+            nuevo_usuario = Usuario(usuario=request.json["usuario"], contrasena=contrasena_encriptada, rol=Roles.ADMIN)
             db.session.add(nuevo_usuario)
             db.session.commit()
-            token_de_acceso = create_access_token(identity=nuevo_usuario.id)
-            return {"mensaje": "usuario creado exitosamente", "id": nuevo_usuario.id}
+            additional_claims={'rol': nuevo_usuario.rol}
+            token_de_acceso = create_access_token(identity=nuevo_usuario.id, additional_claims=additional_claims)
+            return {"mensaje": "usuario creado exitosamente", "id": nuevo_usuario.id, "rol":nuevo_usuario.rol, "token":token_de_acceso}
         else:
             return "El usuario ya existe", 404
 
@@ -56,9 +106,34 @@ class VistaLogIn(Resource):
         if usuario is None:
             return "El usuario no existe", 404
         else:
-            token_de_acceso = create_access_token(identity=usuario.id)
+            additional_claims={'rol': usuario.rol}
+            print(additional_claims)
+            token_de_acceso = create_access_token(identity=usuario.id, additional_claims=additional_claims)
+            #token_de_acceso = create_access_token(identity=usuario.id)
             return {"mensaje": "Inicio de sesión exitoso", "token": token_de_acceso, "id": usuario.id}
+        
+class VistaUsuariosChefs(Resource):
 
+    @role_required('ADMIN')
+    @jwt_required()
+    #@admin_required()
+    def get(self, id_usuario):
+        results = (Usuario.query.filter_by(parent_id=str(id_usuario)).all())
+        return [usuario_schema.dump(usuario) for usuario in results]
+    
+    @role_required('ADMIN')
+    @jwt_required()
+    def post(self, id_usuario):
+        nuevo_user = Usuario( \
+            usuario = request.json["usuario"], \
+            contrasena = hashlib.md5(request.json["contrasena"].encode('utf-8')).hexdigest(), \
+            rol = Roles.CHEF, \
+            nombre = request.json["nombre"], \
+            parent_id = id_usuario
+        )
+        db.session.add(nuevo_user)
+        db.session.commit()
+        return {"mensaje": "Chef creado exitosamente", "id": nuevo_user.id}
 
 class VistaIngredientes(Resource):
     @jwt_required()
@@ -108,6 +183,69 @@ class VistaIngrediente(Resource):
         else:
             return 'El ingrediente se está usando en diferentes recetas', 409
 
+# HU: REC-4 y REC-6
+# Creación de vista
+class VistaRestaurantes(Resource):
+    @jwt_required()
+    def get(self, id_usuario):
+        restaurantes = Resturante.query.filter_by(usuario=str(id_usuario)).all()
+        resultados = [restaurante_schema.dump(restaurante) for restaurante in restaurantes]
+        return resultados
+
+    @jwt_required()
+    def post(self, id_usuario):
+        nuevo_resturante = Resturante( \
+            nombre = request.json["nombre"], \
+            direccion = request.json["direccion"], \
+            telefono = request.json["telefono"], \
+            redesSociales = request.json["redesSociales"], \
+            horario = request.json["horario"], \
+            tipoComida = request.json["tipoComida"], \
+            apps = request.json["apps"], \
+            opciones = int(request.json["opciones"]), \
+            usuario = id_usuario \
+        )
+        try:
+            db.session.add(nuevo_resturante)
+            db.session.commit()
+        except:
+            return "El nombre del restaurante ya existe", 404
+            
+        return restaurante_schema.dump(nuevo_resturante)
+
+# HU: REC-4 y REC-6
+# Creación de vista
+class VistaRestaurante(Resource):
+    @jwt_required()
+    def get(self, id_restaurante):
+        restaurante = Resturante.query.get_or_404(id_restaurante)
+        resultados = restaurante_schema.dump(Resturante.query.get_or_404(id_restaurante))
+     
+        return resultados
+
+    @jwt_required()
+    def put(self, id_restaurante):
+        restaurante = Resturante.query.get_or_404(id_restaurante)
+        restaurante.nombre = request.json["nombre"]
+        restaurante.direccion = request.json["direccion"]
+        restaurante.telefono = request.json["telefono"]
+        restaurante.redesSociales = request.json["redesSociales"]
+        restaurante.horario = request.json["horario"]
+        restaurante.tipoComida = request.json["tipoComida"]
+        restaurante.apps = request.json["apps"]
+        restaurante.opciones = int(request.json["opciones"])
+        
+        db.session.add(restaurante)
+        db.session.commit()
+        return restaurante_schema.dump(restaurante)
+
+    @jwt_required()
+    def delete(self, id_restaurante):
+        restaurante = Resturante.query.get_or_404(id_restaurante)
+        db.session.delete(restaurante)
+        db.session.commit()
+        return '', 204 
+        
 
 class VistaRecetas(Resource):
     @jwt_required()
@@ -224,4 +362,11 @@ class VistaReceta(Resource):
                 receta_ingrediente_retornar = receta_ingrediente
                 
         return receta_ingrediente_retornar
-        
+
+class VistaTipoUsuario(Resource):
+    @jwt_required()
+    def get(self):
+        current_user = get_jwt()
+    # Lógica para obtener el tipo de usuario del back
+        user_role = current_user['rol']  
+        return {"user_type":user_role}
