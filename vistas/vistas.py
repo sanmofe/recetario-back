@@ -111,7 +111,14 @@ class VistaLogIn(Resource):
             token_de_acceso = create_access_token(identity=usuario.id, additional_claims=additional_claims)
             #token_de_acceso = create_access_token(identity=usuario.id)
             return {"mensaje": "Inicio de sesión exitoso", "token": token_de_acceso, "id": usuario.id}
-        
+
+class VistaRestaurantesChefs(Resource):
+    @role_required('ADMIN')
+    @jwt_required()
+    def get(self, id_restaurante):
+        results = (Usuario.query.filter_by(parent_id=str(id_restaurante)).all())
+        return [usuario_schema.dump(usuario) for usuario in results]        
+       
 class VistaUsuariosChefs(Resource):
 
     @role_required('ADMIN')
@@ -129,7 +136,8 @@ class VistaUsuariosChefs(Resource):
             contrasena = hashlib.md5(request.json["contrasena"].encode('utf-8')).hexdigest(), \
             rol = Roles.CHEF, \
             nombre = request.json["nombre"], \
-            parent_id = id_usuario
+            parent_id = id_usuario, \
+            restaurante_id = 1
         )
         db.session.add(nuevo_user)
         db.session.commit()
