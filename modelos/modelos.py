@@ -40,10 +40,6 @@ class RecetaIngrediente(db.Model):
     ingrediente = db.Column(db.Integer, db.ForeignKey('ingrediente.id'))
     receta = db.Column(db.Integer, db.ForeignKey('receta.id'))
 
-class AministradorIngrediente(db.Model):
-    idIngrediente = db.Column(db.Intefer, db.ForeignKey('ingrediente.id'))
-    idUsuario = db.Column(db.Intefer, db.ForeignKey('usuario.id'))
-
 class Receta(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     nombre = db.Column(db.String(128))
@@ -61,6 +57,7 @@ class Usuario(db.Model):
     parent_id = db.Column(db.Integer, db.ForeignKey("usuario.id"))
     parent = db.relationship("Usuario", remote_side=[id])
     recetas = db.relationship('Receta', cascade='all, delete, delete-orphan')
+    ingredientes = db.relationship('Ingrediente', cascade= 'all, delete, delete-orphan')
     rol = db.Column(db.Enum(Roles))
 
 # HU: REC-4 y REC-6

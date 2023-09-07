@@ -140,7 +140,7 @@ class VistaIngredientes(Resource):
     def get(self):
         ingredientes = Ingrediente.query.all()
         return [ingrediente_schema.dump(ingrediente) for ingrediente in ingredientes]
-
+    @role_required('ADMIN')
     @jwt_required()
     def post(self):
         nuevo_ingrediente = Ingrediente( \
@@ -160,7 +160,7 @@ class VistaIngrediente(Resource):
     @jwt_required()
     def get(self, id_ingrediente):
         return ingrediente_schema.dump(Ingrediente.query.get_or_404(id_ingrediente))
-        
+    @role_required('ADMIN')    
     @jwt_required()
     def put(self, id_ingrediente):
         ingrediente = Ingrediente.query.get_or_404(id_ingrediente)
@@ -292,7 +292,7 @@ class VistaReceta(Resource):
     def get(self, id_receta):
         receta = Receta.query.get_or_404(id_receta)
         ingredientes = Ingrediente.query.all()
-        resultados = receta_schema.dump(Receta.query.get_or_404(id_receta))
+        resultados = receta_schema.dump(receta)
         recetaIngredientes = resultados['ingredientes']
         for recetaIngrediente in recetaIngredientes:
             for ingrediente in ingredientes: 
