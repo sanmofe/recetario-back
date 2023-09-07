@@ -24,7 +24,8 @@ class Resturante(db.Model):
     apps = db.Column(db.String(500))
     opciones = db.Column(db.Numeric)
     usuario = db.Column(db.Integer, db.ForeignKey('usuario.id'))
-
+    empleado_id = db.Column(db.Integer, db.ForeignKey('usuario.id'))
+    empleados = db.relationship("Usuario", foreign_keys=[empleado_id])
 
 class Ingrediente(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -58,6 +59,7 @@ class Usuario(db.Model):
     parent = db.relationship("Usuario", remote_side=[id])
     recetas = db.relationship('Receta', cascade='all, delete, delete-orphan')
     rol = db.Column(db.Enum(Roles))
+    restaurante_id = db.Column(db.Integer, db.ForeignKey("resturante.id"))
 
 # HU: REC-4 y REC-6
 # Creación de esquema
