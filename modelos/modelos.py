@@ -33,6 +33,7 @@ class Ingrediente(db.Model):
     costo = db.Column(db.Numeric)
     calorias = db.Column(db.Numeric)
     sitio = db.Column(db.String(128))
+    usuario = db.Column(db.Integer, db.ForeignKey('usuario.id'))
 
 class RecetaIngrediente(db.Model):
     id = db.Column(db.Integer, primary_key=True)

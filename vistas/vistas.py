@@ -219,7 +219,7 @@ class VistaRestaurante(Resource):
     @jwt_required()
     def get(self, id_restaurante):
         restaurante = Resturante.query.get_or_404(id_restaurante)
-        resultados = restaurante_schema.dump(Resturante.query.get_or_404(id_restaurante))
+        resultados = restaurante_schema.dump(restaurante)
      
         return resultados
 
