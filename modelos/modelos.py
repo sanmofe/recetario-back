@@ -34,6 +34,7 @@ class Ingrediente(db.Model):
     costo = db.Column(db.Numeric)
     calorias = db.Column(db.Numeric)
     sitio = db.Column(db.String(128))
+    usuario = db.Column(db.Integer, db.ForeignKey('usuario.id'))
 
 class RecetaIngrediente(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -58,6 +59,7 @@ class Usuario(db.Model):
     parent_id = db.Column(db.Integer, db.ForeignKey("usuario.id"))
     parent = db.relationship("Usuario", remote_side=[id])
     recetas = db.relationship('Receta', cascade='all, delete, delete-orphan')
+    ingredientes = db.relationship('Ingrediente', cascade= 'all, delete, delete-orphan')
     rol = db.Column(db.Enum(Roles))
     restaurante_id = db.Column(db.Integer, db.ForeignKey("resturante.id"))
 
@@ -121,3 +123,4 @@ class UsuarioSchema(SQLAlchemyAutoSchema):
         load_instance = True
         
     id = fields.String()
+
