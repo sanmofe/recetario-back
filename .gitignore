@@ -145,3 +145,4 @@ cython_debug/
 
 #DataBase
 test.db
+dbapp.sqlite
