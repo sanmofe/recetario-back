@@ -125,7 +125,7 @@ class VistaRestaurantesChefs(Resource):
     @role_required('ADMIN')
     @jwt_required()
     def get(self, id_restaurante):
-        results = (Usuario.query.filter_by(parent_id=str(id_restaurante)).all())
+        results = (Usuario.query.filter_by(restaurante_id=str(id_restaurante)).all())
         return [usuario_schema.dump(usuario) for usuario in results]        
        
 class VistaUsuariosChefs(Resource):
@@ -146,7 +146,7 @@ class VistaUsuariosChefs(Resource):
             rol = Roles.CHEF, \
             nombre = request.json["nombre"], \
             parent_id = id_usuario, \
-            restaurante_id = 1
+            restaurante_id = request.json["restaurante"]  \
         )
         db.session.add(nuevo_user)
         db.session.commit()
