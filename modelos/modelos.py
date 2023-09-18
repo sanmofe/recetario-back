@@ -63,6 +63,17 @@ class Usuario(db.Model):
     rol = db.Column(db.Enum(Roles))
     restaurante_id = db.Column(db.Integer, db.ForeignKey("resturante.id"))
 
+
+
+class Menu(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    nombre = db.Column(db.String(200))
+    fechaInicio = db.Column(db.DateTime)
+    fechaFin = db.Column(db.DateTime)
+    restaurante_id = db.Column(db.Integer, db.ForeignKey("resturante.id"))
+#recetas = db.relationship('MenuReceta', cascade='all, delete, delete-orphan')
+
+
 # HU: REC-4 y REC-6
 # Creación de esquema
 class ResturanteSchema(SQLAlchemyAutoSchema):
@@ -124,3 +135,15 @@ class UsuarioSchema(SQLAlchemyAutoSchema):
         
     id = fields.String()
 
+
+class MenuSchema(SQLAlchemyAutoSchema):
+    class Meta:
+        model = Menu
+        include_relationships = True
+        include_fk = True
+        load_instance = True
+        
+    id = fields.String()
+    nombre = fields.String()
+    fechaInicio = fields.DateTime()
+    fechaFin = fields.DateTime()
