@@ -13,7 +13,8 @@ from modelos import \
     Ingrediente, IngredienteSchema, \
     RecetaIngrediente, RecetaIngredienteSchema, \
     Receta, RecetaSchema, \
-    Usuario, UsuarioSchema \
+    Usuario, UsuarioSchema, \
+    Menu, MenuSchema
 
 
 ingrediente_schema = IngredienteSchema()
@@ -21,6 +22,7 @@ restaurante_schema = ResturanteSchema()
 receta_ingrediente_schema = RecetaIngredienteSchema()
 receta_schema = RecetaSchema()
 usuario_schema = UsuarioSchema()
+menu_schema = MenuSchema()
 
 """
 def admin_required(fn):
@@ -390,3 +392,39 @@ class VistaTipoUsuario(Resource):
     # Lógica para obtener el tipo de usuario del back
         user_role = current_user['rol']  
         return {"user_type":user_role}
+
+class VistaMenus(Resource):
+    @jwt_required()
+    def post(self):
+        new_menu = Menu( \
+            nombre = request.json["nombre"], \
+            fechaInicio = datetime.strptime(request.json["fechaInicio"],"%d/%m/%Y"), \
+            fechaFin = datetime.strptime(request.json["fechaFin"],"%d/%m/%Y") \
+            
+        )
+        try:
+            db.session.add(new_menu)
+            db.session.commit()
+        except:
+            return "No se pudo crear el menú", 404
+            
+        return menu_schema.dump(new_menu)
+    @jwt_required()
+    def get(self, id_restaurante):
+        restaurante = Resturante.query.get_or_404(id_restaurante)
+        resultados = restaurante_schema.dump(restaurante)
+     
+        return resultados
+
+"""   
+    @jwt_required()
+    def get(self, id_restaurante):
+        menus = Menu.query.filter_by(restaurante_id=str(id_restaurante)).all()
+        resultados = [menu_schema.dump(menu) for menu in menus]
+        recetas = Receta.query.all()
+        for menu in resultados:
+            for receta in menu['ingredientes']:
+                self.actualizar_ingredientes_util(receta_ingrediente, ingredientes)
+
+        return resultados
+"""
