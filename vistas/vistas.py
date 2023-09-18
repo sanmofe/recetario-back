@@ -5,6 +5,7 @@ from sqlalchemy.exc import IntegrityError
 from datetime import datetime
 from functools import wraps
 from flask import jsonify
+from sqlalchemy import func
 import hashlib
 
 from modelos import \
@@ -211,24 +212,28 @@ class VistaRestaurantes(Resource):
 
     @jwt_required()
     def post(self, id_usuario):
-        nuevo_resturante = Resturante( \
-            nombre = request.json["nombre"], \
-            direccion = request.json["direccion"], \
-            telefono = request.json["telefono"], \
-            redesSociales = request.json["redesSociales"], \
-            horario = request.json["horario"], \
-            tipoComida = request.json["tipoComida"], \
-            apps = request.json["apps"], \
-            opciones = int(request.json["opciones"]), \
-            usuario = id_usuario \
-        )
-        try:
+        restaurante = Resturante.query.filter(
+            Resturante.usuario == str(id_usuario),
+            func.lower(Resturante.nombre) == func.lower(request.json["nombre"])
+        ).first()
+        db.session.commit()
+        if restaurante is None:
+            nuevo_resturante = Resturante( \
+                nombre = request.json["nombre"], \
+                direccion = request.json["direccion"], \
+                telefono = request.json["telefono"], \
+                redesSociales = request.json["redesSociales"], \
+                horario = request.json["horario"], \
+                tipoComida = request.json["tipoComida"], \
+                apps = request.json["apps"], \
+                opciones = int(request.json["opciones"]), \
+                usuario = id_usuario \
+            )
             db.session.add(nuevo_resturante)
             db.session.commit()
-        except:
+            return restaurante_schema.dump(nuevo_resturante)
+        else:
             return "El nombre del restaurante ya existe", 404
-            
-        return restaurante_schema.dump(nuevo_resturante)
 
 # HU: REC-4 y REC-6
 # Creación de vista
