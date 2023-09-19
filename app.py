@@ -32,7 +32,7 @@ api.add_resource(VistaSignIn, '/signin')
 api.add_resource(VistaLogIn, '/login')
 api.add_resource(VistaIngredientes, '/ingredientes')
 api.add_resource(VistaIngrediente, '/ingrediente/<int:id_ingrediente>')
-
+api.add_resource()
 # HU: REC-4 y REC-6
 api.add_resource(VistaRestaurantes, '/restaurantes/<int:id_usuario>')
 api.add_resource(VistaRestaurante, '/restaurante/<int:id_restaurante>')
@@ -41,8 +41,5 @@ api.add_resource(VistaRecetas, '/recetas/<int:id_usuario>')
 api.add_resource(VistaReceta, '/receta/<int:id_receta>')
 api.add_resource(VistaUsuariosChefs, '/chefs/<int:id_usuario>')
 api.add_resource(VistaRestaurantesChefs, "/restaurante/<int:id_restaurante>/empleados")
-api.add_resource(VistaTipoUsuario, '/api/user-type')
-api.add_resource(VistaTipoUsuario, '/api/user-type/<int:id_usuario>')
-
 
 jwt = JWTManager(app)

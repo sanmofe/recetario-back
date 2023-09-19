@@ -157,16 +157,15 @@ class VistaIngredientes(Resource):
     def get(self):
         ingredientes = Ingrediente.query.all()
         return [ingrediente_schema.dump(ingrediente) for ingrediente in ingredientes]
-
+    @role_required('ADMIN')
     @jwt_required()
-    def post(self,usuario_id):
+    def post(self):
         nuevo_ingrediente = Ingrediente( \
             nombre = request.json["nombre"], \
             unidad = request.json["unidad"], \
             costo = float(request.json["costo"]), \
             calorias = float(request.json["calorias"]), \
-            sitio = request.json["sitio"], \
-            usuario= usuario_id\
+            sitio = request.json["sitio"] \
         )
         
         db.session.add(nuevo_ingrediente)
@@ -304,7 +303,7 @@ class VistaRecetas(Resource):
         nueva_receta = Receta( \
             nombre = request.json["nombre"], \
             preparacion = request.json["preparacion"], \
-            ingredientes = [], \
+            ingredientes = [], \    
             usuario = id_usuario, \
             duracion = float(request.json["duracion"]), \
             porcion = float(request.json["porcion"]) \
