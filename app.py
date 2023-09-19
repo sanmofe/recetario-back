@@ -42,6 +42,7 @@ api.add_resource(VistaReceta, '/receta/<int:id_receta>')
 api.add_resource(VistaUsuariosChefs, '/chefs/<int:id_usuario>')
 api.add_resource(VistaRestaurantesChefs, "/restaurante/<int:id_restaurante>/empleados")
 api.add_resource(VistaTipoUsuario, '/api/user-type')
+api.add_resource(VistaTipoUsuario, '/api/user-type/<int:id_usuario>')
 
 
 jwt = JWTManager(app)
