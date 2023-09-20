@@ -9,7 +9,7 @@ from vistas import \
     VistaRestaurante, VistaRestaurantes, \
     VistaReceta, VistaRecetas, \
     VistaSignIn, VistaLogIn, \
-    VistaUsuariosChefs, VistaTipoUsuario, \
+    VistaUsuariosChefs, \
     VistaRestaurantesChefs
 
 app = Flask(__name__)

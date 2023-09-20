@@ -153,6 +153,7 @@ class VistaUsuariosChefs(Resource):
         return {"mensaje": "Chef creado exitosamente", "id": nuevo_user.id}
 
 class VistaIngredientes(Resource):
+    @role_required('ADMIN')
     @jwt_required()
     def get(self):
         ingredientes = Ingrediente.query.all()

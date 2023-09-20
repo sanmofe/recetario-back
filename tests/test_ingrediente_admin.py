@@ -51,6 +51,7 @@ class TestIngredienteAdmin(TestCase):
             costo_nuevo_ingrediente = round(random.uniform(0.1, 0.99), 2)
             calorias_nuevo_ingrediente = round(random.uniform(0.1, 0.99), 2)
             sitio_nuevo_ingrediente = self.data_factory.sentence()
+            usuario_id = self.usuario_id
         
             #Crear el json con el ingrediente a crear
             nuevo_ingrediente = {
@@ -58,7 +59,8 @@ class TestIngredienteAdmin(TestCase):
                 "unidad": unidad_nuevo_ingrediente,
                 "costo": costo_nuevo_ingrediente,
                 "calorias": calorias_nuevo_ingrediente,
-                "sitio": sitio_nuevo_ingrediente
+                "sitio": sitio_nuevo_ingrediente,
+                "usuario": usuario_id
             }
         
             #Definir endpoint, encabezados y hacer el llamado
