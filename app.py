@@ -10,7 +10,8 @@ from vistas import \
     VistaReceta, VistaRecetas, \
     VistaSignIn, VistaLogIn, \
     VistaUsuariosChefs, VistaTipoUsuario, \
-    VistaRestaurantesChefs, VistaMenus
+    VistaRestaurantesChefs, VistaMenus, \
+    VistaMenusChef, VistaMenu
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///dbapp.sqlite'
@@ -42,7 +43,10 @@ api.add_resource(VistaReceta, '/receta/<int:id_receta>')
 api.add_resource(VistaUsuariosChefs, '/chefs/<int:id_usuario>')
 api.add_resource(VistaRestaurantesChefs, "/restaurante/<int:id_restaurante>/empleados")
 api.add_resource(VistaTipoUsuario, '/api/user-type')
-api.add_resource(VistaMenus, '/menus')
+api.add_resource(VistaMenus, '/admin/menus/<int:id_usuario>')
+api.add_resource(VistaMenusChef, '/chef/menus/<int:parent_id>')
+api.add_resource(VistaMenu, '/menus/<int:id_menu>')
+
 
 
 

@@ -70,7 +70,9 @@ class Menu(db.Model):
     nombre = db.Column(db.String(200))
     fechaInicio = db.Column(db.DateTime)
     fechaFin = db.Column(db.DateTime)
-    restaurante_id = db.Column(db.Integer, db.ForeignKey("resturante.id"))
+    usuario = db.Column(db.Integer, db.ForeignKey('usuario.id'))
+    autor = db.Column(db.String(200))
+
 #recetas = db.relationship('MenuReceta', cascade='all, delete, delete-orphan')
 
 

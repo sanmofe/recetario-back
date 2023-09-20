@@ -400,12 +400,13 @@ class VistaTipoUsuario(Resource):
 
 class VistaMenus(Resource):
     @jwt_required()
-    def post(self):
+    def post(self, id_usuario):
         new_menu = Menu( \
             nombre = request.json["nombre"], \
             fechaInicio = datetime.strptime(request.json["fechaInicio"],"%d/%m/%Y"), \
-            fechaFin = datetime.strptime(request.json["fechaFin"],"%d/%m/%Y") \
-            
+            fechaFin = datetime.strptime(request.json["fechaFin"],"%d/%m/%Y"), \
+            autor = request.json["autor"], \
+            usuario = id_usuario \
         )
         try:
             db.session.add(new_menu)
@@ -415,11 +416,50 @@ class VistaMenus(Resource):
             
         return menu_schema.dump(new_menu)
     @jwt_required()
-    def get(self, id_restaurante):
-        restaurante = Resturante.query.get_or_404(id_restaurante)
-        resultados = restaurante_schema.dump(restaurante)
-     
+    def get(self, id_usuario):
+        menus = Menu.query.filter_by(usuario=str(id_usuario)).all()
+        resultados = [menu_schema.dump(menu) for menu in menus]
         return resultados
+    
+class VistaMenusChef(Resource):
+    @jwt_required()
+    def post(self, parent_id):
+        new_menu = Menu( \
+            nombre = request.json["nombre"], \
+            fechaInicio = datetime.strptime(request.json["fechaInicio"],"%d/%m/%Y"), \
+            fechaFin = datetime.strptime(request.json["fechaFin"],"%d/%m/%Y"), \
+            autor = request.json["autor"], \
+            usuario = parent_id \
+        )
+        try:
+            db.session.add(new_menu)
+            db.session.commit()
+        except:
+            return "No se pudo crear el menú", 404
+            
+        return menu_schema.dump(new_menu)
+    
+    @jwt_required()
+    def get(self, parent_id):
+        menus = Menu.query.filter_by(usuario=str(parent_id)).all()
+        resultados = [menu_schema.dump(menu) for menu in menus]
+        return resultados
+
+    
+class VistaMenu(Resource):
+    @jwt_required()
+    def get(self, id_menu):
+        menu = Menu.query.get_or_404(id_menu)
+        result = menu_schema.dump(menu)
+     
+        return result
+    
+    @jwt_required()
+    def delete(self, id_menu):
+        menu = Menu.query.get_or_404(id_menu)
+        db.session.delete(menu)
+        db.session.commit()
+        return '', 204 
 
 """   
     @jwt_required()
