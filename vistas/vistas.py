@@ -411,11 +411,10 @@ class VistaMenus(Resource):
             
         return menu_schema.dump(new_menu)
     @jwt_required()
-    def get(self, id_menu):
-        menu = Menu.query.get_or_404(id_menu)
-        result = menu_schema.dump(menu)
-     
-        return result
+    def get(self, id_usuario):
+        menus = Menu.query.filter_by(usuario=str(id_usuario)).all()
+        resultados = [menu_schema.dump(menu) for menu in menus]
+        return resultados
     
 class VistaMenusChef(Resource):
     @jwt_required()
@@ -434,6 +433,15 @@ class VistaMenusChef(Resource):
             return "No se pudo crear el menú", 404
             
         return menu_schema.dump(new_menu)
+    
+    @jwt_required()
+    def get(self, parent_id):
+        menus = Menu.query.filter_by(usuario=str(parent_id)).all()
+        resultados = [menu_schema.dump(menu) for menu in menus]
+        return resultados
+
+    
+class VistaMenu(Resource):
     @jwt_required()
     def get(self, id_menu):
         menu = Menu.query.get_or_404(id_menu)
@@ -441,6 +449,12 @@ class VistaMenusChef(Resource):
      
         return result
     
+    @jwt_required()
+    def delete(self, id_menu):
+        menu = Menu.query.get_or_404(id_menu)
+        db.session.delete(menu)
+        db.session.commit()
+        return '', 204 
 
 """   
     @jwt_required()
