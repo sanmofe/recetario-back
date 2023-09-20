@@ -194,6 +194,27 @@ class VistaIngredientesChef(Resource):
         db.session.commit()
         return ingrediente_schema.dump(nuevo_ingrediente)
 
+class VistaIngredientesAdmin(Resource):
+    @role_required('ADMIN')
+    @jwt_required()
+    def get(self, id_usuario):
+        ingredientes = Ingrediente.query.filter_by(usuario=str(id_usuario)).all()
+        return [ingrediente_schema.dump(ingrediente) for ingrediente in ingredientes]
+
+    @role_required('ADMIN')
+    @jwt_required()
+    def post(self, id_usuario):
+        nuevo_ingrediente = Ingrediente( \
+            nombre = request.json["nombre"], \
+            unidad = request.json["unidad"], \
+            costo = float(request.json["costo"]), \
+            calorias = float(request.json["calorias"]), \
+            sitio = request.json["sitio"], \
+            usuario = id_usuario \
+        )
+        db.session.add(nuevo_ingrediente)
+        db.session.commit()
+        return ingrediente_schema.dump(nuevo_ingrediente)
 
 class VistaIngrediente(Resource):
     @role_required('ADMIN')
@@ -304,7 +325,7 @@ class VistaRecetas(Resource):
         nueva_receta = Receta( \
             nombre = request.json["nombre"], \
             preparacion = request.json["preparacion"], \
-            ingredientes = [], \    
+            ingredientes = [],    
             usuario = id_usuario, \
             duracion = float(request.json["duracion"]), \
             porcion = float(request.json["porcion"]) \
