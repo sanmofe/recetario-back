@@ -175,8 +175,8 @@ class VistaIngredientes(Resource):
     
 class VistaIngredientesChef(Resource):
     @jwt_required()
-    def get(self, id_usuario):
-        ingredientes = Ingrediente.query.filter_by(usuario=str(id_usuario)).all()
+    def get(self, parent_id):
+        ingredientes = Ingrediente.query.filter_by(usuario=str(parent_id)).all()
         return [ingrediente_schema.dump(ingrediente) for ingrediente in ingredientes]
 
     @role_required('ADMIN')
@@ -197,8 +197,8 @@ class VistaIngredientesChef(Resource):
 class VistaIngredientesAdmin(Resource):
     @role_required('ADMIN')
     @jwt_required()
-    def get(self, id_usuario):
-        ingredientes = Ingrediente.query.filter_by(usuario=str(id_usuario)).all()
+    def get(self, parent_id):
+        ingredientes = Ingrediente.query.filter_by(usuario=str(parent_id)).all()
         return [ingrediente_schema.dump(ingrediente) for ingrediente in ingredientes]
 
     @role_required('ADMIN')
