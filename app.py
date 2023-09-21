@@ -11,7 +11,7 @@ from vistas import \
     VistaSignIn, VistaLogIn, \
     VistaUsuariosChefs, VistaTipoUsuario, \
     VistaRestaurantesChefs, VistaMenus, \
-    VistaMenusChef, VistaMenu
+    VistaMenusChef, VistaMenu, VistaMenuSemanal\
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///dbapp.sqlite'
@@ -46,6 +46,7 @@ api.add_resource(VistaTipoUsuario, '/api/user-type')
 api.add_resource(VistaMenus, '/admin/menus/<int:id_usuario>')
 api.add_resource(VistaMenusChef, '/chef/menus/<int:parent_id>')
 api.add_resource(VistaMenu, '/menus/<int:id_menu>')
+api.add_resource(VistaMenuSemanal, '/menus/verificar')
 
 
 

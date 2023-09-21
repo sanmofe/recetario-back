@@ -2,6 +2,7 @@ from flask import request
 from flask_jwt_extended import jwt_required, create_access_token, verify_jwt_in_request, get_jwt
 from flask_restful import Resource
 from sqlalchemy.exc import IntegrityError
+from sqlalchemy import and_
 from datetime import datetime
 from functools import wraps
 from flask import jsonify
@@ -121,7 +122,7 @@ class VistaLogIn(Resource):
             print(additional_claims)
             token_de_acceso = create_access_token(identity=usuario.id, additional_claims=additional_claims)
             #token_de_acceso = create_access_token(identity=usuario.id)
-            return {"mensaje": "Inicio de sesión exitoso", "token": token_de_acceso, "id": usuario.id,"restaurante":usuario.restaurante_id}
+            return {"mensaje": "Inicio de sesión exitoso", "token": token_de_acceso, "id": usuario.id,"username":usuario.usuario,"restaurante":usuario.restaurante_id}
 
 class VistaRestaurantesChefs(Resource):
     @role_required('ADMIN')
@@ -392,30 +393,77 @@ class VistaTipoUsuario(Resource):
     # Lógica para obtener el tipo de usuario del back
         user_role = current_user['rol']  
         return {"user_type":user_role}
+    
+
+class VistaMenuSemanal(Resource):
+    @jwt_required()
+    def post(self):
+        data = request.get_json()
+        fecha_inicio = data.get('fechaInicio')
+        fecha_fin = data.get('fechaFin')
+        menus = Menu.query.filter(Menu.fechaInicio >= fecha_inicio, Menu.fechaFin <= fecha_fin).all()
+        if len(menus) >0:
+            return {"existeMenu": True}
+        #resultados = [menu_schema.dump(menu) for menu in menus]
+        return {"existeMenu": False}
+
 
 class VistaMenus(Resource):
     @jwt_required()
     def post(self, id_usuario):
         new_menu = Menu( \
             nombre = request.json["nombre"], \
-            fechaInicio = datetime.strptime(request.json["fechaInicio"],"%d/%m/%Y"), \
-            fechaFin = datetime.strptime(request.json["fechaFin"],"%d/%m/%Y"), \
+            fechaInicio = datetime.strptime(request.json["fechaInicio"],"%Y-%m-%d"), \
+            fechaFin = datetime.strptime(request.json["fechaFin"],"%Y-%m-%d"), \
             autor = request.json["autor"], \
+            descripcion = request.json["descripcion"], \
             usuario = id_usuario \
         )
+
+        fInicio = datetime.strptime(request.json["fechaInicio"],"%Y-%m-%d")
+        fFin = datetime.strptime(request.json["fechaFin"],"%Y-%m-%d")
+
+        #menus = Menu.query.filter(and_(Menu.fechaInicio >= fInicio, Menu.fechaFin <= fFin)).all()
+        menus = Menu.query.all()
+        print(menus)
+        exist = False
+        for menu in menus:
+            año_fecha_I1, num_semana_fecha_I1, _ = fInicio.isocalendar()
+            año_fecha_I2, num_semana_fecha_I2, _ = menu.fechaInicio.isocalendar()
+            año_fecha_F1, num_semana_fecha_F1, _ = fFin.isocalendar()
+            año_fecha_F2, num_semana_fecha_F2, _ = menu.fechaFin.isocalendar()
+            print("SEMANAS: ",num_semana_fecha_I1, num_semana_fecha_I2, num_semana_fecha_F1, num_semana_fecha_F1)
+            if num_semana_fecha_I1 == num_semana_fecha_I2 or num_semana_fecha_F1 == num_semana_fecha_F2:
+                exist = True
+                break
+        print(exist)
+        if exist:
+            return "Ya existe el menú esa semana", 404
+
+        
+        #if len(menus)>0:
+        #if num_semana_fecha1 == num_semana_fecha2 and año_fecha1 == año_fecha2:
+        
+
         try:
             db.session.add(new_menu)
             db.session.commit()
         except:
             return "No se pudo crear el menú", 404
-            
         return menu_schema.dump(new_menu)
     @jwt_required()
     def get(self, id_usuario):
         menus = Menu.query.filter_by(usuario=str(id_usuario)).all()
         resultados = [menu_schema.dump(menu) for menu in menus]
         return resultados
-    
+
+def misma_semana(fecha1, fecha2):
+    # Obtener el número de semana y el año para ambas fechas
+    num_semana_fecha1, año_fecha1, _ = fecha1.isocalendar()
+    num_semana_fecha2, año_fecha2, _ = fecha2.isocalendar()
+
+    # Comprobar si ambas fechas tienen el mismo número de semana y año
+    return num_semana_fecha1 == num_semana_fecha2 and año_fecha1 == año_fecha2
 class VistaMenusChef(Resource):
     @jwt_required()
     def post(self, parent_id):
@@ -424,8 +472,14 @@ class VistaMenusChef(Resource):
             fechaInicio = datetime.strptime(request.json["fechaInicio"],"%d/%m/%Y"), \
             fechaFin = datetime.strptime(request.json["fechaFin"],"%d/%m/%Y"), \
             autor = request.json["autor"], \
+            descripcion = request.json["descripcion"], \
             usuario = parent_id \
         )
+        menus = Menu.query.filter(Menu.fechaInicio >= datetime.strptime(request.json["fechaInicio"],"%Y-%m-%d"), Menu.fechaFin <= datetime.strptime(request.json["fechaFin"],"%Y-%m-%d")).all()
+
+        if len(menus)>0:
+            return "Ya existe el menú", 404
+
         try:
             db.session.add(new_menu)
             db.session.commit()

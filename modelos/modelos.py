@@ -72,6 +72,7 @@ class Menu(db.Model):
     fechaFin = db.Column(db.DateTime)
     usuario = db.Column(db.Integer, db.ForeignKey('usuario.id'))
     autor = db.Column(db.String(200))
+    descripcion = db.Column(db.String(200))
 
 #recetas = db.relationship('MenuReceta', cascade='all, delete, delete-orphan')
 
@@ -149,3 +150,4 @@ class MenuSchema(SQLAlchemyAutoSchema):
     nombre = fields.String()
     fechaInicio = fields.DateTime()
     fechaFin = fields.DateTime()
+    descripcion = fields.String()
