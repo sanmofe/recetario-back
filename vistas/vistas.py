@@ -123,7 +123,7 @@ class VistaLogIn(Resource):
             print(additional_claims)
             token_de_acceso = create_access_token(identity=usuario.id, additional_claims=additional_claims)
             #token_de_acceso = create_access_token(identity=usuario.id)
-            return {"mensaje": "Inicio de sesión exitoso", "token": token_de_acceso, "id": usuario.id,"username":usuario.usuario,"restaurante":usuario.restaurante_id}
+            return {"mensaje": "Inicio de sesión exitoso", "token": token_de_acceso, "id": usuario.id,"username":usuario.usuario,"restaurante":usuario.restaurante_id,"idParent":usuario.parent_id}
 
 class VistaRestaurantesChefs(Resource):
     @role_required('ADMIN')
