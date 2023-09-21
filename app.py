@@ -11,7 +11,7 @@ from vistas import \
     VistaSignIn, VistaLogIn, \
     VistaUsuariosChefs, VistaTipoUsuario, \
     VistaRestaurantesChefs, VistaMenus, \
-    VistaMenusChef, VistaMenu, VistaMenuSemanal\
+    VistaMenusChef, VistaMenu, VistaMenuSemanal,\
     VistaIngredientesChef, VistaIngredientesAdmin \
 
 
