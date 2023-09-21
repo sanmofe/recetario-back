@@ -15,7 +15,7 @@ class Roles(str, enum.Enum):
 # Creación de objeto
 class Resturante(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    nombre = db.Column(db.String(200), unique=True)
+    nombre = db.Column(db.String(200))
     direccion = db.Column(db.String(200))
     telefono = db.Column(db.String(200))
     redesSociales = db.Column(db.String(500))

@@ -6,6 +6,7 @@ from sqlalchemy import and_
 from datetime import datetime
 from functools import wraps
 from flask import jsonify
+from sqlalchemy import func
 import hashlib
 
 from modelos import \
@@ -156,6 +157,7 @@ class VistaUsuariosChefs(Resource):
         return {"mensaje": "Chef creado exitosamente", "id": nuevo_user.id}
 
 class VistaIngredientes(Resource):
+    @role_required('ADMIN')
     @jwt_required()
     def get(self):
         ingredientes = Ingrediente.query.all()
@@ -174,9 +176,52 @@ class VistaIngredientes(Resource):
         db.session.add(nuevo_ingrediente)
         db.session.commit()
         return ingrediente_schema.dump(nuevo_ingrediente)
+    
+class VistaIngredientesChef(Resource):
+    @jwt_required()
+    def get(self, parent_id):
+        ingredientes = Ingrediente.query.filter_by(usuario=str(parent_id)).all()
+        return [ingrediente_schema.dump(ingrediente) for ingrediente in ingredientes]
 
+    @role_required('ADMIN')
+    @jwt_required()
+    def post(self, id_usuario):
+        nuevo_ingrediente = Ingrediente( \
+            nombre = request.json["nombre"], \
+            unidad = request.json["unidad"], \
+            costo = float(request.json["costo"]), \
+            calorias = float(request.json["calorias"]), \
+            sitio = request.json["sitio"], \
+            usuario = id_usuario \
+        )
+        db.session.add(nuevo_ingrediente)
+        db.session.commit()
+        return ingrediente_schema.dump(nuevo_ingrediente)
+
+class VistaIngredientesAdmin(Resource):
+    @role_required('ADMIN')
+    @jwt_required()
+    def get(self, parent_id):
+        ingredientes = Ingrediente.query.filter_by(usuario=str(parent_id)).all()
+        return [ingrediente_schema.dump(ingrediente) for ingrediente in ingredientes]
+
+    @role_required('ADMIN')
+    @jwt_required()
+    def post(self, id_usuario):
+        nuevo_ingrediente = Ingrediente( \
+            nombre = request.json["nombre"], \
+            unidad = request.json["unidad"], \
+            costo = float(request.json["costo"]), \
+            calorias = float(request.json["calorias"]), \
+            sitio = request.json["sitio"], \
+            usuario = id_usuario \
+        )
+        db.session.add(nuevo_ingrediente)
+        db.session.commit()
+        return ingrediente_schema.dump(nuevo_ingrediente)
 
 class VistaIngrediente(Resource):
+    @role_required('ADMIN')
     @jwt_required()
     def get(self, id_ingrediente):
         return ingrediente_schema.dump(Ingrediente.query.get_or_404(id_ingrediente))
@@ -214,24 +259,28 @@ class VistaRestaurantes(Resource):
 
     @jwt_required()
     def post(self, id_usuario):
-        nuevo_resturante = Resturante( \
-            nombre = request.json["nombre"], \
-            direccion = request.json["direccion"], \
-            telefono = request.json["telefono"], \
-            redesSociales = request.json["redesSociales"], \
-            horario = request.json["horario"], \
-            tipoComida = request.json["tipoComida"], \
-            apps = request.json["apps"], \
-            opciones = int(request.json["opciones"]), \
-            usuario = id_usuario \
-        )
-        try:
+        restaurante = Resturante.query.filter(
+            Resturante.usuario == str(id_usuario),
+            func.lower(Resturante.nombre) == func.lower(request.json["nombre"])
+        ).first()
+        db.session.commit()
+        if restaurante is None:
+            nuevo_resturante = Resturante( \
+                nombre = request.json["nombre"], \
+                direccion = request.json["direccion"], \
+                telefono = request.json["telefono"], \
+                redesSociales = request.json["redesSociales"], \
+                horario = request.json["horario"], \
+                tipoComida = request.json["tipoComida"], \
+                apps = request.json["apps"], \
+                opciones = int(request.json["opciones"]), \
+                usuario = id_usuario \
+            )
             db.session.add(nuevo_resturante)
             db.session.commit()
-        except:
+            return restaurante_schema.dump(nuevo_resturante)
+        else:
             return "El nombre del restaurante ya existe", 404
-            
-        return restaurante_schema.dump(nuevo_resturante)
 
 # HU: REC-4 y REC-6
 # Creación de vista
@@ -284,7 +333,7 @@ class VistaRecetas(Resource):
         nueva_receta = Receta( \
             nombre = request.json["nombre"], \
             preparacion = request.json["preparacion"], \
-            ingredientes = [], \
+            ingredientes = [],    
             usuario = id_usuario, \
             duracion = float(request.json["duracion"]), \
             porcion = float(request.json["porcion"]) \
