@@ -8,6 +8,7 @@ from functools import wraps
 from flask import jsonify
 from sqlalchemy import func
 import hashlib
+import json
 
 from modelos import \
     db, Roles, \
@@ -16,7 +17,9 @@ from modelos import \
     RecetaIngrediente, RecetaIngredienteSchema, \
     Receta, RecetaSchema, \
     Usuario, UsuarioSchema, \
-    Menu, MenuSchema
+    Menu, MenuSchema, \
+    MenuReceta, MenuRecetaSchema \
+    
 
 
 ingrediente_schema = IngredienteSchema()
@@ -340,7 +343,7 @@ class VistaRecetas(Resource):
         )
         for receta_ingrediente in request.json["ingredientes"]:
             nueva_receta_ingrediente = RecetaIngrediente( \
-                cantidad = receta_ingrediente["cantidad"], \
+                cantidad = float(receta_ingrediente["cantidad"]), \
                 ingrediente = int(receta_ingrediente["idIngrediente"])
             )
             nueva_receta.ingredientes.append(nueva_receta_ingrediente)
@@ -362,6 +365,7 @@ class VistaReceta(Resource):
         receta = Receta.query.get_or_404(id_receta)
         ingredientes = Ingrediente.query.all()
         resultados = receta_schema.dump(receta)
+        print("TIPO DE DATO: ",type(resultados))
         recetaIngredientes = resultados['ingredientes']
         for recetaIngrediente in recetaIngredientes:
             for ingrediente in ingredientes: 
@@ -466,8 +470,16 @@ class VistaMenus(Resource):
             fechaFin = datetime.strptime(request.json["fechaFin"],"%Y-%m-%d"), \
             autor = request.json["autor"], \
             descripcion = request.json["descripcion"], \
-            usuario = id_usuario \
+            usuario = id_usuario, \
+            recetas = [],    
+
         )
+        for menu_receta in request.json["recetas"]:
+            nuevo_menu_receta = MenuReceta( \
+            num_personas = float(menu_receta["num_personas"]), \
+            receta = int(menu_receta["idReceta"])
+        )
+            new_menu.recetas.append(nuevo_menu_receta)
 
         fInicio = datetime.strptime(request.json["fechaInicio"],"%Y-%m-%d")
         fFin = datetime.strptime(request.json["fechaFin"],"%Y-%m-%d")
@@ -476,35 +488,36 @@ class VistaMenus(Resource):
         menus = Menu.query.all()
         print(menus)
         exist = False
+        año_fecha_I1, num_semana_fecha_I1, _ = fInicio.isocalendar()
+        año_fecha_F1, num_semana_fecha_F1, _ = fFin.isocalendar()
+ 
         for menu in menus:
-            año_fecha_I1, num_semana_fecha_I1, _ = fInicio.isocalendar()
             año_fecha_I2, num_semana_fecha_I2, _ = menu.fechaInicio.isocalendar()
-            año_fecha_F1, num_semana_fecha_F1, _ = fFin.isocalendar()
             año_fecha_F2, num_semana_fecha_F2, _ = menu.fechaFin.isocalendar()
-            print("SEMANAS: ",num_semana_fecha_I1, num_semana_fecha_I2, num_semana_fecha_F1, num_semana_fecha_F1)
+            print("SEMANAS: ",num_semana_fecha_I1, num_semana_fecha_I2, num_semana_fecha_F1, num_semana_fecha_F2)
             if num_semana_fecha_I1 == num_semana_fecha_I2 or num_semana_fecha_F1 == num_semana_fecha_F2:
                 exist = True
+                print(exist)
                 break
-        print(exist)
-        if exist:
-            return "Ya existe el menú esa semana", 404
-
-        
-        #if len(menus)>0:
-        #if num_semana_fecha1 == num_semana_fecha2 and año_fecha1 == año_fecha2:
-        
-
+        #print(exist)
+        #if exist:
+            #return "Ya existe el menú esa semana", 404
         try:
-            db.session.add(new_menu)
-            db.session.commit()
+            if exist==False:
+                db.session.add(new_menu)
+                db.session.commit()
         except:
             return "No se pudo crear el menú", 404
-        return menu_schema.dump(new_menu)
-    @jwt_required()
-    def get(self, id_usuario):
-        menus = Menu.query.filter_by(usuario=str(id_usuario)).all()
-        resultados = [menu_schema.dump(menu) for menu in menus]
-        return resultados
+        return receta_schema.dump(new_menu)
+   # @jwt_required()
+   # def get(self, id_usuario):
+   #     menus = Menu.query.filter_by(usuario=str(id_usuario)).all()
+   #     resultados = [menu_schema.dump(menu) for menu in menus]
+   #     for menu in menus: 
+   #         if str(menu.id)==menu['receta']:
+   #             menu['receta'] = ingrediente_schema.dump(menu)
+   #             #menu['receta']['numPersonas'] = float(menu['receta']['costo'])
+   #     return resultados
 
 def misma_semana(fecha1, fecha2):
     # Obtener el número de semana y el año para ambas fechas
@@ -548,9 +561,29 @@ class VistaMenu(Resource):
     @jwt_required()
     def get(self, id_menu):
         menu = Menu.query.get_or_404(id_menu)
-        result = menu_schema.dump(menu)
-     
-        return result
+        recetas = Receta.query.all()
+        resul = menu_schema.dumps(menu,default=str)
+        resultados = json.loads(resul)
+
+        for field_name, field_value in menu.__dict__.items():
+            print(field_name, field_value)
+            print(isinstance(field_value, int))
+            if isinstance(field_value, int):
+                setattr(menu, field_name, str(field_value))
+                menu.__dict__[field_name] = str(field_value)
+
+        #resultados = menu_schema.dump(menu)
+        print("RESULTADOS: ",resultados)
+        print(resultados['recetas'])
+        menuRecetas = resultados['recetas']
+        for menuReceta in menuRecetas:
+            for receta in recetas: 
+                if str(receta.id)==menuReceta['receta']:
+                    menuReceta['receta'] = receta_schema.dump(receta)
+                    print("DENTRO DEL FOR: ",menuReceta['receta'])
+                    #menuReceta['receta']['recetas'][] = float(menuReceta['receta']['num_personas'])
+
+        return resultados
     
     @jwt_required()
     def delete(self, id_menu):
@@ -559,15 +592,4 @@ class VistaMenu(Resource):
         db.session.commit()
         return '', 204 
 
-"""   
-    @jwt_required()
-    def get(self, id_restaurante):
-        menus = Menu.query.filter_by(restaurante_id=str(id_restaurante)).all()
-        resultados = [menu_schema.dump(menu) for menu in menus]
-        recetas = Receta.query.all()
-        for menu in resultados:
-            for receta in menu['ingredientes']:
-                self.actualizar_ingredientes_util(receta_ingrediente, ingredientes)
 
-        return resultados
-"""

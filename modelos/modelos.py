@@ -70,11 +70,18 @@ class Menu(db.Model):
     nombre = db.Column(db.String(200))
     fechaInicio = db.Column(db.DateTime)
     fechaFin = db.Column(db.DateTime)
-    usuario = db.Column(db.Integer, db.ForeignKey('usuario.id'))
     autor = db.Column(db.String(200))
     descripcion = db.Column(db.String(200))
+    recetas = db.relationship('MenuReceta', cascade='all, delete, delete-orphan')
+    usuario = db.Column(db.Integer, db.ForeignKey('usuario.id'))
 
-#recetas = db.relationship('MenuReceta', cascade='all, delete, delete-orphan')
+   
+
+class MenuReceta(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    num_personas = db.Column(db.Numeric)
+    menu = db.Column(db.Integer, db.ForeignKey('menu.id'))
+    receta = db.Column(db.Integer, db.ForeignKey('receta.id'))
 
 
 # HU: REC-4 y REC-6
@@ -138,6 +145,16 @@ class UsuarioSchema(SQLAlchemyAutoSchema):
         
     id = fields.String()
 
+class MenuRecetaSchema(SQLAlchemyAutoSchema):
+    class Meta:
+        model = MenuReceta
+        include_relationships = True
+        include_fk = True
+        load_instance = True
+        
+    id = fields.String()
+    numPersonas = fields.String()
+    receta = fields.String()
 
 class MenuSchema(SQLAlchemyAutoSchema):
     class Meta:
@@ -151,3 +168,4 @@ class MenuSchema(SQLAlchemyAutoSchema):
     fechaInicio = fields.DateTime()
     fechaFin = fields.DateTime()
     descripcion = fields.String()
+    recetas = fields.List(fields.Nested(MenuRecetaSchema()))
