@@ -186,29 +186,29 @@ class VistaIngredientesChef(Resource):
         ingredientes = Ingrediente.query.filter_by(usuario=str(parent_id)).all()
         return [ingrediente_schema.dump(ingrediente) for ingrediente in ingredientes]
 
-    @role_required('ADMIN')
+    #@role_required('ADMIN')
     @jwt_required()
-    def post(self, id_usuario):
+    def post(self, parent_id):
         nuevo_ingrediente = Ingrediente( \
             nombre = request.json["nombre"], \
             unidad = request.json["unidad"], \
             costo = float(request.json["costo"]), \
             calorias = float(request.json["calorias"]), \
             sitio = request.json["sitio"], \
-            usuario = id_usuario \
+            usuario = parent_id \
         )
         db.session.add(nuevo_ingrediente)
         db.session.commit()
         return ingrediente_schema.dump(nuevo_ingrediente)
 
 class VistaIngredientesAdmin(Resource):
-    @role_required('ADMIN')
+    #@role_required('ADMIN')
     @jwt_required()
-    def get(self, parent_id):
-        ingredientes = Ingrediente.query.filter_by(usuario=str(parent_id)).all()
+    def get(self, id_usuario):
+        ingredientes = Ingrediente.query.filter_by(usuario=str(id_usuario)).all()
         return [ingrediente_schema.dump(ingrediente) for ingrediente in ingredientes]
 
-    @role_required('ADMIN')
+    #@role_required('ADMIN')
     @jwt_required()
     def post(self, id_usuario):
         nuevo_ingrediente = Ingrediente( \
@@ -509,15 +509,29 @@ class VistaMenus(Resource):
         except:
             return "No se pudo crear el menú", 404
         return receta_schema.dump(new_menu)
-   # @jwt_required()
-   # def get(self, id_usuario):
-   #     menus = Menu.query.filter_by(usuario=str(id_usuario)).all()
-   #     resultados = [menu_schema.dump(menu) for menu in menus]
-   #     for menu in menus: 
-   #         if str(menu.id)==menu['receta']:
-   #             menu['receta'] = ingrediente_schema.dump(menu)
-   #             #menu['receta']['numPersonas'] = float(menu['receta']['costo'])
-   #     return resultados
+    @jwt_required()
+    def get(self, id_usuario):
+        menus = Menu.query.filter_by(usuario=str(id_usuario)).all()
+        #resultados = [menu_schema.dump(menu) for menu in menus]
+
+        #recetas = Receta.query.filter_by(usuario=str(id_usuario)).all()
+        #resultados = [receta_schema.dump(receta) for receta in recetas]
+        print("MENUS: ",menus)
+        resul = [menu_schema.dumps(menu,default=str) for menu in menus]
+        #resul = menu_schema.dumps(menus,default=str)
+        print("RESULTADOS: ",resul)
+        resultados = []
+
+        for r in resul:
+            resultados.append(json.loads(r))
+
+        #resultados = json.loads(resul)
+        ingredientes = Ingrediente.query.all()
+        #for menu in menus: 
+        #    if str(menu.id)==menu['receta']:
+        #        menu['receta'] = ingrediente_schema.dump(menu)
+                #menu['receta']['numPersonas'] = float(menu['receta']['costo'])
+        return resultados
 
 def misma_semana(fecha1, fecha2):
     # Obtener el número de semana y el año para ambas fechas
@@ -531,30 +545,61 @@ class VistaMenusChef(Resource):
     def post(self, parent_id):
         new_menu = Menu( \
             nombre = request.json["nombre"], \
-            fechaInicio = datetime.strptime(request.json["fechaInicio"],"%d/%m/%Y"), \
-            fechaFin = datetime.strptime(request.json["fechaFin"],"%d/%m/%Y"), \
+            fechaInicio = datetime.strptime(request.json["fechaInicio"],"%Y-%m-%d"), \
+            fechaFin = datetime.strptime(request.json["fechaFin"],"%Y-%m-%d"), \
             autor = request.json["autor"], \
             descripcion = request.json["descripcion"], \
-            usuario = parent_id \
+            usuario = parent_id, \
+            recetas = [],    
+
         )
-        menus = Menu.query.filter(Menu.fechaInicio >= datetime.strptime(request.json["fechaInicio"],"%Y-%m-%d"), Menu.fechaFin <= datetime.strptime(request.json["fechaFin"],"%Y-%m-%d")).all()
+        for menu_receta in request.json["recetas"]:
+            nuevo_menu_receta = MenuReceta( \
+            num_personas = float(menu_receta["num_personas"]), \
+            receta = int(menu_receta["idReceta"])
+        )
+            new_menu.recetas.append(nuevo_menu_receta)
 
-        if len(menus)>0:
-            return "Ya existe el menú", 404
+        fInicio = datetime.strptime(request.json["fechaInicio"],"%Y-%m-%d")
+        fFin = datetime.strptime(request.json["fechaFin"],"%Y-%m-%d")
 
+        #menus = Menu.query.filter(and_(Menu.fechaInicio >= fInicio, Menu.fechaFin <= fFin)).all()
+        menus = Menu.query.all()
+        print(menus)
+        exist = False
+        año_fecha_I1, num_semana_fecha_I1, _ = fInicio.isocalendar()
+        año_fecha_F1, num_semana_fecha_F1, _ = fFin.isocalendar()
+ 
+        for menu in menus:
+            año_fecha_I2, num_semana_fecha_I2, _ = menu.fechaInicio.isocalendar()
+            año_fecha_F2, num_semana_fecha_F2, _ = menu.fechaFin.isocalendar()
+            print("SEMANAS: ",num_semana_fecha_I1, num_semana_fecha_I2, num_semana_fecha_F1, num_semana_fecha_F2)
+            if num_semana_fecha_I1 == num_semana_fecha_I2 or num_semana_fecha_F1 == num_semana_fecha_F2:
+                exist = True
+                print(exist)
+                break
+        #print(exist)
+        if exist:
+            return "Ya existe el menú esa semana", 404
         try:
-            db.session.add(new_menu)
-            db.session.commit()
+            if exist==False:
+                db.session.add(new_menu)
+                db.session.commit()
         except:
             return "No se pudo crear el menú", 404
-            
-        return menu_schema.dump(new_menu)
+        return receta_schema.dump(new_menu)
     
     @jwt_required()
     def get(self, parent_id):
-        menus = Menu.query.filter_by(usuario=str(parent_id)).all()
-        resultados = [menu_schema.dump(menu) for menu in menus]
-        return resultados
+            menus = Menu.query.filter_by(usuario=str(parent_id)).all()
+            print("MENUS: ",menus)
+            resul = [menu_schema.dumps(menu,default=str) for menu in menus]
+            print("RESULTADOS: ",resul)
+            resultados = []
+            for r in resul:
+                resultados.append(json.loads(r))
+            ingredientes = Ingrediente.query.all()
+            return resultados
 
     
 class VistaMenu(Resource):

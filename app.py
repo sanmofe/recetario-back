@@ -37,8 +37,8 @@ api.add_resource(VistaIngredientes, '/ingredientes')
 api.add_resource(VistaIngrediente, '/ingrediente/<int:id_ingrediente>')
 
 # HU: REC-9
-api.add_resource(VistaIngredientesChef, '/chefs/<int:id_usuario>/ingredientes')
-api.add_resource(VistaIngredientesAdmin,'/admin/ingredientes/<int:parent_id>')
+api.add_resource(VistaIngredientesChef, '/chef/ingredientes/<int:parent_id>')
+api.add_resource(VistaIngredientesAdmin,'/admin/ingredientes/<int:id_usuario>')
 
 # HU: REC-4 y REC-6
 api.add_resource(VistaRestaurantes, '/restaurantes/<int:id_usuario>')
