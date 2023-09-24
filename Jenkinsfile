@@ -8,30 +8,25 @@ pipeline {
     stages {
         stage('Checkout') { 
             steps {
-                scmSkip(deleteBuild: true, skipPattern:'.*\\[ci-skip\\].*')
                 git branch: 'main',  
-                credentialsId: env.GITHUB_TOKEN_ID,
-                url: 'https://github.com/MISW-4201-ProcesosDesarrolloAgil/' + env.GIT_REPO
+                    credentialsId: env.GITHUB_TOKEN_ID,
+                    url: 'https://github.com/MISW-4201-ProcesosDesarrolloAgil/' + env.GIT_REPO
             }
         }
         stage('Gitinspector') {
             steps {
-                script {
-                    docker.image('gitinspector-isis2603').inside('--entrypoint=""') {
-                        sh '''
-                            mkdir -p ./reports/
-                            gitinspector --file-types="py" --format=html --AxU -w -T -x author:Bocanegra -x author:estudiante > ./reports/index.html
-                        '''
-                    }
-                }
                 withCredentials([usernamePassword(credentialsId: env.GITHUB_TOKEN_ID, passwordVariable: 'GIT_PASSWORD', usernameVariable: 'GIT_USERNAME')]) {
-                    sh('git config --global user.email "ci-isis2603@uniandes.edu.co"')
-                    sh('git config --global user.name "ci-isis2603"')
-                    sh('git add ./reports/index.html')
-                    sh('git commit -m "[ci-skip] GitInspector report added"')
-                    sh('git pull https://${GIT_USERNAME}:${GIT_PASSWORD}@github.com/MISW-4201-ProcesosDesarrolloAgil/${GIT_REPO} main')
-                    sh('git push https://${GIT_USERNAME}:${GIT_PASSWORD}@github.com/MISW-4201-ProcesosDesarrolloAgil/${GIT_REPO} main')
+	                sh 'mkdir -p code-analyzer-report'
+	                sh """ curl --request POST --url https://code-analyzer.virtual.uniandes.edu.co/analyze --header "Content-Type: application/json" --data '{"repo_url":"git@github.com:MISW-4201-ProcesosDesarrolloAgil/${GIT_REPO}.git", "access_token": "${GIT_PASSWORD}" }' > code-analyzer-report/index.html """   
                 }  
+	            publishHTML (target: [
+	                allowMissing: false,
+	                alwaysLinkToLastBuild: false,
+	                keepAll: true,
+	                reportDir: 'code-analyzer-report',
+	                reportFiles: 'index.html',
+	                reportName: "GitInspector"
+                ])
             }
         }
         stage('Install libraries') {
@@ -83,8 +78,11 @@ pipeline {
     }
     post { 
       always { 
-         // Clean workspace
-         cleanWs deleteDirs: true
+          cleanWs()
+          deleteDir() 
+          dir("${env.GIT_REPO}@tmp") {
+              deleteDir()
+	      }
       }
    }
 }

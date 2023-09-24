@@ -15,7 +15,7 @@ class Roles(str, enum.Enum):
 # Creación de objeto
 class Resturante(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    nombre = db.Column(db.String(200), unique=True)
+    nombre = db.Column(db.String(200))
     direccion = db.Column(db.String(200))
     telefono = db.Column(db.String(200))
     redesSociales = db.Column(db.String(500))
@@ -62,6 +62,27 @@ class Usuario(db.Model):
     ingredientes = db.relationship('Ingrediente', cascade= 'all, delete, delete-orphan')
     rol = db.Column(db.Enum(Roles))
     restaurante_id = db.Column(db.Integer, db.ForeignKey("resturante.id"))
+
+
+
+class Menu(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    nombre = db.Column(db.String(200))
+    fechaInicio = db.Column(db.DateTime)
+    fechaFin = db.Column(db.DateTime)
+    autor = db.Column(db.String(200))
+    descripcion = db.Column(db.String(200))
+    recetas = db.relationship('MenuReceta', cascade='all, delete, delete-orphan')
+    usuario = db.Column(db.Integer, db.ForeignKey('usuario.id'))
+
+   
+
+class MenuReceta(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    num_personas = db.Column(db.Numeric)
+    menu = db.Column(db.Integer, db.ForeignKey('menu.id'))
+    receta = db.Column(db.Integer, db.ForeignKey('receta.id'))
+
 
 # HU: REC-4 y REC-6
 # Creación de esquema
@@ -124,3 +145,27 @@ class UsuarioSchema(SQLAlchemyAutoSchema):
         
     id = fields.String()
 
+class MenuRecetaSchema(SQLAlchemyAutoSchema):
+    class Meta:
+        model = MenuReceta
+        include_relationships = True
+        include_fk = True
+        load_instance = True
+        
+    id = fields.String()
+    numPersonas = fields.String()
+    receta = fields.String()
+
+class MenuSchema(SQLAlchemyAutoSchema):
+    class Meta:
+        model = Menu
+        include_relationships = True
+        include_fk = True
+        load_instance = True
+        
+    id = fields.String()
+    nombre = fields.String()
+    fechaInicio = fields.DateTime()
+    fechaFin = fields.DateTime()
+    descripcion = fields.String()
+    recetas = fields.List(fields.Nested(MenuRecetaSchema()))
