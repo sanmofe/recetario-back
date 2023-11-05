@@ -28,6 +28,7 @@ app_context.push()
 db.init_app(app)
 db.create_all()
 
+#Cómo odio los cors ptm
 cors = CORS(app)
 
 api = Api(app)
