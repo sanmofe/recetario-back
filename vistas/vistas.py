@@ -127,6 +127,21 @@ class VistaLogIn(Resource):
             token_de_acceso = create_access_token(identity=usuario.id, additional_claims=additional_claims)
             #token_de_acceso = create_access_token(identity=usuario.id)
             return {"mensaje": "Inicio de sesión exitoso", "token": token_de_acceso, "id": usuario.id,"username":usuario.usuario,"restaurante":usuario.restaurante_id,"idParent":usuario.parent_id}
+    def put(self):
+        contrasena_encriptada = hashlib.md5(request.json["contrasena"].encode('utf-8')).hexdigest()
+        usuario = Usuario.query.filter(Usuario.usuario == request.json["usuario"],
+                                       Usuario.contrasena == contrasena_encriptada).first()
+        db.session.commit()
+        print(str(hashlib.md5("admin".encode('utf-8')).hexdigest()))
+        if usuario is None:
+            return "El usuario no existe", 404
+        else:
+            additional_claims={'rol': usuario.rol}
+            print(additional_claims)
+            token_de_acceso = create_access_token(identity=usuario.id, additional_claims=additional_claims)
+            #token_de_acceso = create_access_token(identity=usuario.id)
+            return {"mensaje": "Inicio de sesión exitoso", "token": token_de_acceso, "id": usuario.id,"username":usuario.usuario,"restaurante":usuario.restaurante_id,"idParent":usuario.parent_id}
+
 
 class VistaRestaurantesChefs(Resource):
     @role_required('ADMIN')
